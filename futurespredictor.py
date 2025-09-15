@@ -65,26 +65,11 @@ if higherprob >= 0.5:
 if contango is False and pr > 0:
     trcalc()
 else:
-    smas = closes.rolling(10).average()
-    ps = []
-    for q in smas:
-        relevcloses = closes[0 + (smas.index[q]): 10 + (smas.index[q])]
-        zs = [((b - q) / np.std(np.array(relevcloses))) for b in relevcloses]
-        ps.append(scipy.stats.norm.sf(abs(np.mean(np.array(zs)))))
-    if ps.count(p > 0.05 for p in ps) >= (0.05 * len(ps)):
-        X = range(0, len(closes))
-        y = closes.values
-        line = LinearRegression().fit(X, y)
-        line.score(X, y)
-        line.coef_
-        line.intercept_
-        closes.append(line.predict(len(closes)))
-        rr = (neartermpr - closes[-1]) / neartermpr
-        pr = (closes[-1] - neartermpr) / neartermpr
-        trcalc()
-    else:
-        nextval = (closevals.max() - closevals.min() / (closevals.index(closevals.max()) - closevals.index(closevals.min()))) + closevals[0]
-        closes.append(nextval)
-        rr = (neartermpr - closes[-1]) / neartermpr
-        pr = (closes[-1] - neartermpr) / neartermpr
-        trcalc()
+    closeindex = list(range(0, len(closevals)))
+    bx = np.sum(np.array( [(u - np.mean(np.array(closeindex)) ** 2) for u in closeindex]))
+    by = np.sum(np.array( [(u - np.mean(np.array(closes.values)) ** 2) for u in closes.values]))
+    bxy = np.sum(np.array([(u - np.mean(np.array(closeindex)) for u in closeindex) * (t - np.mean(np.array(closes.values)) for t in closes.values)]))
+    b2 = bxy / bx
+    b1 = np.mean(np.array(closes.values)) - (b2 * np.mean(np.array(closeindex)))
+    nextvalpredict = b1 + (b2 * (math.log(closeindex[-1] + 1))) + math.e
+    trcalc()
